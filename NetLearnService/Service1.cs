@@ -279,8 +279,7 @@ namespace NetLearnService
        
         private static void ThreadTask()
         {
-            int stp;
-            int newval;
+          
             Random rnd = new Random();
 
             while (true)
@@ -330,16 +329,7 @@ namespace NetLearnService
 
             return;
 
-            logit(0, "NetLearn ended");
-            int idx = 0;
-
-            foreach (string s in List_ConvKey)
-            {
-             //   Console.WriteLine(s + ";" + List_Send[idx] + ";" + List_Receive[idx]);
-                logit(0,s + ";" + List_Send[idx] + ";" + List_Receive[idx]);
-                idx++;
-            }
-            this.Stop();
+            
         }
         public static void printconv()
         {
