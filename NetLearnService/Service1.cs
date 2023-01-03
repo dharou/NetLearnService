@@ -21,6 +21,7 @@ namespace NetLearnService
 {
     public partial class Service1 : ServiceBase
     {
+        public static int TimerThreadInterval = 5000;
         public static System.IO.StreamWriter log;
         public static List<Server> List_Server = new List<Server>();
         public static List<Service> List_Service = new List<Service>();
@@ -290,7 +291,7 @@ namespace NetLearnService
                     printconv();
                     break;
                 }
-                Thread.Sleep(5000);
+                Thread.Sleep(TimerThreadInterval);
             }
         }
 
