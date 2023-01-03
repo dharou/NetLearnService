@@ -113,10 +113,11 @@ namespace NetLearnService
                         s.ProcessId = int.Parse(wmiServiceObj["ProcessId"].ToString());
                         List_Service.Add(s);
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
 
                     }
+                    
                 }
             }
         }
@@ -211,7 +212,7 @@ namespace NetLearnService
                     }
                     catch (Exception e)
                     {
-                        logit(0, "Specify a valid IP address");
+                        logit(0, "Specify a valid IP address" + e.ToString());
                     }
 
                 }
@@ -232,7 +233,7 @@ namespace NetLearnService
                     }
                     catch (Exception e)
                     {
-                        logit(0, "Specify a valid verbosity (0-4 ) level or default is 0 ");
+                        logit(0, "Specify a valid verbosity (0-4 ) level or default is 0 " + e.ToString());
                         break;
                     }
                 }
