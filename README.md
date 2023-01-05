@@ -8,3 +8,5 @@
 ## Installation 
 	1.	Install service 
 	2.	Run Netlearn -i mylocalip -v verbosity -t hh:mm:ss 
+
+	Ex: -i 192.168.2.127 -v 0 -t 00:15:00

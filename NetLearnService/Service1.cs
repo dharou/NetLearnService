@@ -41,6 +41,7 @@ namespace NetLearnService
         public static TraceEventSession LearnSession;
         public static DateTime dtend;
         public Thread CaptureThread;
+        static readonly object lockTab = new object();
 
         public class Server
         {
@@ -190,7 +191,7 @@ namespace NetLearnService
         static void logit(int level, string msg)
         {
             DateTime dateTime = DateTime.Now;
-            if (Verbose <= level)
+            if (Verbose > level)
             {
             Service1.WriteToFile(dateTime.ToString() + " " + msg);
 
@@ -287,7 +288,7 @@ namespace NetLearnService
                 if (DateTime.Now > dtend)
                 {
                     
-                   // LearnSession.Stop();
+                    LearnSession.Stop();
                     printconv();
                     break;
                 }
@@ -334,12 +335,14 @@ namespace NetLearnService
         public static void printconv()
         {
             int idx = 0;
-           // WriteToFile("Service is stopped at " + DateTime.Now);
-            foreach (string s in List_ConvKey)
+            lock (lockTab)
             {
-                //   Console.WriteLine(s + ";" + List_Send[idx] + ";" + List_Receive[idx]);
-                logit(0, s + ";" + List_Send[idx] + ";" + List_Receive[idx]);
-                idx++;
+                foreach (string s in List_ConvKey)
+                {
+
+                    logit(0, s + ";" + List_Send[idx] + ";" + List_Receive[idx]);
+                    idx++;
+                }
             }
         }
 
@@ -349,12 +352,7 @@ namespace NetLearnService
             int idx = 0;
             WriteToFile("Service is stopped at " + DateTime.Now);
             LearnSession.Stop();
-            foreach (string s in List_ConvKey)
-            {
-                //   Console.WriteLine(s + ";" + List_Send[idx] + ";" + List_Receive[idx]);
-                logit(0, s + ";" + List_Send[idx] + ";" + List_Receive[idx]);
-                idx++;
-            }
+            printconv();
         }
         private static void Kernel_TcpIpSend(Microsoft.Diagnostics.Tracing.Parsers.Kernel.TcpIpSendTraceData obj)
         {
@@ -375,20 +373,21 @@ namespace NetLearnService
                 DIR = "SERVER";
                 key = DIR + ";" + obj.saddr.ToString() + "-" + obj.sport + ";" + obj.daddr.ToString() + ";" + Pro;
             }
-
-            idx = List_ConvKey.IndexOf(key);
-            if (idx == -1)
+            lock (lockTab)
             {
-                List_ConvKey.Add(key);
-                List_Send.Add(0);
-                List_Receive.Add(0);
+                idx = List_ConvKey.IndexOf(key);
+                if (idx == -1)
+                {
+                    List_ConvKey.Add(key);
+                    List_Send.Add(0);
+                    List_Receive.Add(0);
 
+                }
+                else
+                {
+                    List_Send[idx]++;
+                }
             }
-            else
-            {
-                List_Send[idx]++;
-            }
-
         }
         public static String GetProcessName(int pid, string procname)
         {
@@ -423,19 +422,21 @@ namespace NetLearnService
                 key = DIR + ";" + obj.saddr.ToString() + "-" + obj.sport + ";" + obj.daddr.ToString() + ";" + Pro;
             }
 
-            idx = List_ConvKey.IndexOf(key);
-            if (idx == -1)
+            lock (lockTab)
             {
-                List_ConvKey.Add(key);
-                List_Receive.Add(0);
-                List_Send.Add(0);
-            }
-            else
-            {
-                List_Receive[idx]++;
-            }
+                idx = List_ConvKey.IndexOf(key);
+                if (idx == -1)
+                {
+                    List_ConvKey.Add(key);
+                    List_Receive.Add(0);
+                    List_Send.Add(0);
+                }
+                else
+                {
+                    List_Receive[idx]++;
+                }
 
-
+            }
         }
 
         private static void Kernel_TcpIpConnect(Microsoft.Diagnostics.Tracing.Parsers.Kernel.TcpIpConnectTraceData obj)
@@ -448,20 +449,22 @@ namespace NetLearnService
             {
                 String Pro = GetProcessName(obj.ProcessID, obj.ProcessName);
                 key = "CLIENT;" + obj.saddr.ToString() + ";" + obj.daddr.ToString() + "-" + obj.dport + ";" + Pro;
-                idx = List_ConvKey.IndexOf(key);
-                if (idx == -1)
+                lock (lockTab)
                 {
-                    List_ConvKey.Add(key);
-                    List_Send.Add(0);
-                    List_Receive.Add(0);
+                    idx = List_ConvKey.IndexOf(key);
+                    if (idx == -1)
+                    {
+                        List_ConvKey.Add(key);
+                        List_Send.Add(0);
+                        List_Receive.Add(0);
+
+                    }
+                    else
+                    {
+                        List_Send[idx]++;
+                    }
 
                 }
-                else
-                {
-                    List_Send[idx]++;
-                }
-
-
 
             }
 
@@ -486,21 +489,22 @@ namespace NetLearnService
                 List_Server.Add(s);
             }
             key = DIR + ";" + obj.saddr.ToString() + "-" + obj.sport + ";" + obj.daddr.ToString() + ";" + Pro;
-
-            idx = List_ConvKey.IndexOf(key);
-            if (idx == -1)
+            lock (lockTab)
             {
-                Console.WriteLine("add key : " + key);
-                List_ConvKey.Add(key);
-                List_Receive.Add(0);
-                List_Send.Add(0);
-            }
-            else
-            {
-                List_Receive[idx]++;
-            }
+                idx = List_ConvKey.IndexOf(key);
+                if (idx == -1)
+                {
+                    Console.WriteLine("add key : " + key);
+                    List_ConvKey.Add(key);
+                    List_Receive.Add(0);
+                    List_Send.Add(0);
+                }
+                else
+                {
+                    List_Receive[idx]++;
+                }
 
-
+            }
 
         }
         
