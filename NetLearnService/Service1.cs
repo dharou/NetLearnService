@@ -31,10 +31,11 @@ namespace NetLearnService
         public static string myversion = "1.01";
         public static IPAddress mylocalip;
         public static int Verbose = 0;
-        public static int Duration = 0;
+        
         public static int hDuration = 0;
         public static int mDuration = 0;
         public static int sDuration = 0;
+        public static int dDuration = 0;
         public static bool VerboseInput = false;
         public static bool IpInput = false;
         public static bool DurationInput = false;
@@ -89,7 +90,10 @@ namespace NetLearnService
             LearnSession.Source.Kernel.TcpIpRecv += Kernel_TcpIpRecv;
             LearnSession.Source.Kernel.TcpIpSend += Kernel_TcpIpSend;
 
-            dtend = DateTime.Now.AddSeconds(Duration);
+            dtend = DateTime.Now.AddMinutes(mDuration);
+            dtend = dtend.AddHours(hDuration);
+            dtend = dtend.AddSeconds(sDuration);
+            dtend = dtend.AddDays(dDuration);
 
             Thread backgroundThread = new Thread(new ThreadStart(ThreadTask));
             backgroundThread.IsBackground = true;
@@ -191,19 +195,20 @@ namespace NetLearnService
         static void logit(int level, string msg)
         {
             DateTime dateTime = DateTime.Now;
-            if (Verbose > level)
+            if (Verbose >= level)
             {
             Service1.WriteToFile(dateTime.ToString() + " " + msg);
 
             }
         }
         static bool ParseArgs(String[] args)
+
         {
+
             int i = 0;
 
             foreach (string arg in args)
             {
-                
                 if (arg.Equals("-i"))
                 {
                     try
@@ -213,7 +218,7 @@ namespace NetLearnService
                     }
                     catch (Exception e)
                     {
-                        logit(0, "Specify a valid IP address" + e.ToString());
+                        logit(0, "Specify a valid IP address");
                     }
 
                 }
@@ -234,27 +239,32 @@ namespace NetLearnService
                     }
                     catch (Exception e)
                     {
-                        logit(0, "Specify a valid verbosity (0-4 ) level or default is 0 " + e.ToString());
+                        logit(0, "Specify a valid verbosity (0-4 ) level or default is 0 ");
                         break;
                     }
                 }
 
                 if (arg.Equals("-t"))
                 {
+                    String hhmmss = "";
                     DurationInput = true;
+                    var dpl = args[i + 1].Split(':');
+                    if (dpl.Length != 4)
+                        return false;
+                    int days = int.Parse(dpl[0]);
+                    hhmmss = dpl[1] + ":" + dpl[2] + ":" + dpl[3];
                     string DurationPattern = @"^([0-1]?\d|2[0-3])(?::([0-5]?\d))?(?::([0-5]?\d))?$";
                     Regex rg = new Regex(DurationPattern);
 
-                    if (rg.IsMatch(args[i + 1]))
+                    if (rg.IsMatch(hhmmss))
                     {
 
-                        var spl = args[i + 1].Split(':');
+                        var spl = hhmmss.Split(':');
                         hDuration = int.Parse(spl[0]);
-                        Duration = hDuration * 3600;
                         mDuration = int.Parse(spl[1]);
-                        Duration = Duration + (mDuration * 60);
                         sDuration = int.Parse(spl[2]);
-                        Duration = Duration + sDuration;
+                        dDuration = days;
+
 
                     }
                     else
@@ -267,7 +277,7 @@ namespace NetLearnService
                 i++;
             }
             if (!DurationInput)
-                Duration = 60;
+                sDuration = 60;
 
             if (!VerboseInput)
                 Verbose = 0;
@@ -277,7 +287,7 @@ namespace NetLearnService
 
             return true;
         }
-       
+
         private static void ThreadTask()
         {
           
@@ -305,7 +315,8 @@ namespace NetLearnService
                 this.Stop();
                 return;
             }
-            logit(0, String.Format("Netlearn {0} is starting with ip : {1}  verbose level {2} and for {3} seconds\n", myversion, mylocalip.ToString(), Verbose, Duration));
+            logit(0, String.Format("Netlearn {0} is starting with ip : {1}  verbose level {2} for {3} day(s) and {4}:{5}:{6} \n",
+               myversion, mylocalip.ToString(), Verbose, dDuration, hDuration, mDuration, sDuration));
 
             if (!GetLocalIPAddress(mylocalip))
             {
